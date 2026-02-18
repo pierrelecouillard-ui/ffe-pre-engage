@@ -24,6 +24,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v6
@@ -36,13 +38,18 @@ jobs:
 
       - name: Debug workspace
         run: |
-          pwd
+          echo "PWD=$(pwd)"
+          echo "---- root listing ----"
           ls -la
+          echo "---- tsconfig at root? ----"
           ls -la tsconfig.json || true
-          cat tsconfig.json || true
+          echo "---- find any tsconfig in repo ----"
+          git ls-tree -r HEAD --name-only | grep -i "tsconfig" || true
+          echo "---- show package scripts ----"
+          node -p "require('./package.json').scripts"
 
       - name: Build
-        run: npm run build
+        run: npm run build -- --debug
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
