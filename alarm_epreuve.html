@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PLACE LIBRE</title>
+    <style>
+      :root { color-scheme: light; }
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        display: grid;
+        place-items: center;
+        height: 100vh;
+        background: #0b1220;
+        color: #fff;
+      }
+      .card{
+        width: min(520px, calc(100vw - 32px));
+        border-radius: 16px;
+        padding: 18px 18px 16px;
+        background: rgba(255,255,255,0.08);
+        border: 1px solid rgba(255,255,255,0.15);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+      }
+      h1{
+        margin: 0 0 10px 0;
+        font-size: 22px;
+        letter-spacing: .4px;
+      }
+      .sub{
+        font-size: 15px;
+        opacity: .92;
+        line-height: 1.35;
+        word-break: break-word;
+      }
+      .pill{
+        display:inline-block;
+        margin-top: 12px;
+        font-size: 12px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgba(0, 255, 163, 0.14);
+        border: 1px solid rgba(0, 255, 163, 0.35);
+        color: #a9ffe0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>PLACE LIBRE ✅</h1>
+      <div id="label" class="sub"></div>
+      <div class="pill">Surveillance épreuve</div>
+    </div>
+
+    <script>
+      const p = new URLSearchParams(location.search);
+      const label = p.get("label") || "";
+      const el = document.getElementById("label");
+      el.textContent = label ? ("Une place s'est libérée sur : " + label) : "Une place s'est libérée sur une épreuve surveillée.";
+    </script>
+  </body>
+</html>

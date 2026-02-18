@@ -1,0 +1,36 @@
+:root { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+body { margin: 0; background: #0b0b0c; color: #eaeaea; }
+a { color: inherit; }
+button, input { font: inherit; }
+.container { max-width: 980px; margin: 0 auto; padding: 16px; }
+.card { background: #141416; border: 1px solid #2a2a2e; border-radius: 14px; padding: 14px; }
+.row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.grid { display: grid; gap: 12px; }
+.grid-2 { grid-template-columns: 1fr 1fr; }
+@media (max-width: 760px){ .grid-2{ grid-template-columns: 1fr; } }
+.badge { padding: 4px 10px; border-radius: 999px; border: 1px solid #2a2a2e; background: #101012; font-size: 12px; }
+.badge.OPEN { border-color: #2f8f4f; }
+.badge.FULL { border-color: #8f2f2f; }
+.badge.CLOSED { border-color: #8a7a2f; }
+.badge.ERROR { border-color: #7a2f8f; }
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 12px; }
+input { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #2a2a2e; background: #0f0f11; color: #eaeaea; }
+button { padding: 10px 12px; border-radius: 10px; border: 1px solid #2a2a2e; background: #1b1b1f; color: #eaeaea; cursor: pointer; }
+button:hover { background: #222228; }
+button.primary { background: #2a2aee; border-color: #2a2aee; }
+button.primary:hover { background: #3434ff; }
+hr { border: 0; border-top: 1px solid #2a2a2e; margin: 12px 0; }
+.small { font-size: 12px; opacity: 0.8; }
+/* --- Fix: ne pas appliquer width:100% aux checkboxes --- */
+input[type="checkbox"]{
+  width: auto;
+  padding: 0;
+  margin: 0;
+}
+
+/* --- Largeur des champs (évite les inputs trop longs) --- */
+.input-s{ max-width: 280px; justify-self: start; }
+.input-xs{ max-width: 140px; justify-self: start; }
+@media (max-width: 760px){
+  .input-s, .input-xs{ max-width: 100%; }
+}

@@ -1,0 +1,1 @@
+{"main-capability":{"identifier":"main-capability","description":"Main capability","local":true,"windows":["main"],"permissions":["core:default","core:webview:allow-create-webview-window","notification:default","opener:default"]}}
