@@ -34,6 +34,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Debug workspace
+        run: |
+          pwd
+          ls -la
+          ls -la tsconfig.json || true
+          cat tsconfig.json || true
+
       - name: Build
         run: npm run build
 
