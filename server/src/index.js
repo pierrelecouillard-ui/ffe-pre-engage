@@ -11,7 +11,14 @@ app.use(cors({
   ]
 }));
 
-app.get("/health", (req, res) => res.json({ ok: true }));
+app.get("/", (req, res) => {
+  res.type("text").send("FFE Pre-Engage API is running");
+});
+
+app.get("/health", (req, res) => {
+  res.json({ ok: true });
+});
+
 
 // Endpoint qui remplace l'ancien invoke("load_epreuves", { url })
 app.post("/api/load-epreuves", async (req, res) => {
