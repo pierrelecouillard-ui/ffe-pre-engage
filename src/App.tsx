@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import "./styles.css";
 import { addTarget, deleteTarget, listTargets, startWatcher, stopWatcher, type Target } from "./api";
-import { invoke } from "./lib/invoke";
+import invoke from "./lib/invoke";
 
 const isTauriRuntime = () => typeof (window as any).__TAURI_INTERNALS__ !== "undefined";
 
