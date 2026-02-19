@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import "./styles.css";
 import { addTarget, deleteTarget, listTargets, startWatcher, stopWatcher, type Target } from "./api";
-import { listen } from "@tauri-apps/api/event";
-import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
-import { invoke } from "@tauri-apps/api/core";
+import { invoke } from "./lib/invoke";
+
+const isTauriRuntime = () => !!(window as any).__TAURI__?.core?.invoke;
 
 export default function App() {
   const [targets, setTargets] = useState<Target[]>([]);
@@ -120,11 +120,13 @@ useEffect(() => {
 
 useEffect(() => {
   // Le backend émet "ffe:status" après save_ffe_session()
-  // ⚠️ Cookies ≠ login. Après la saisie des identifiants, il peut y avoir des redirections SSO :
-  // on revalide plusieurs fois via check_ffe_connected avant d'afficher une erreur.
-  const unlistenPromise = listen<{ connected?: boolean; cookieCount?: number }>(
-    "ffe:status",
-    async () => {
+  // En mode Web (iPhone), il n'y a pas d'events Tauri -> on ignore.
+  let unlisten: undefined | (() => void);
+
+  if (isTauriRuntime()) {
+    (async () => {
+      const { listen } = await import("@tauri-apps/api/event");
+      unlisten = await listen<{ connected?: boolean; cookieCount?: number }>("ffe:status", async () => {
       const wait = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
       let ok = false;
@@ -137,11 +139,12 @@ useEffect(() => {
       setFfeServerOk(ok);
       setFfeLoginError(ok ? null : "Connexion FFE non confirmée (redirection SSO en cours ou session absente).");
       setFfeLoginLoading(false);
-    }
-  );
+    });
+    })().catch(() => {});
+  }
 
   return () => {
-    unlistenPromise.then((un) => un());
+    if (unlisten) unlisten();
   };
 }, []);
 
@@ -211,10 +214,19 @@ useEffect(() => {
 
   // ✅ Ouvre la fenêtre Tauri d'alerte "concours" (alarm.html) avec le N° concours
 async function openAlarmConcoursWindow(id: string) {
-  const url = `alarm.html?id=${encodeURIComponent(id)}`;
+  const relative = `alarm.html?id=${encodeURIComponent(id)}`;
+  const url = new URL(relative, window.location.href).toString();
 
-  // si déjà ouverte, on tente de la montrer + focus
-  let existing: WebviewWindow | null = null;
+  if (!isTauriRuntime()) {
+    // Web/iPhone: ouvre dans un nouvel onglet (Safari)
+    window.open(url, "_blank");
+    return;
+  }
+
+  // Tauri desktop: fenêtre dédiée
+  const { WebviewWindow } = await import("@tauri-apps/api/webviewWindow");
+
+  let existing: any = null;
   try {
     existing = await WebviewWindow.getByLabel("alarm");
   } catch {}
@@ -224,9 +236,8 @@ async function openAlarmConcoursWindow(id: string) {
     return;
   }
 
-  // sinon on la crée
   const win = new WebviewWindow("alarm", {
-    url,
+    url: relative,
     title: "ALERTE CONCOURS",
     alwaysOnTop: true,
     focus: true,
@@ -240,9 +251,17 @@ async function openAlarmConcoursWindow(id: string) {
 
 // ✅ Ouvre la fenêtre Tauri d'alerte "épreuve" (alarm_epreuve.html)
 async function openAlarmEpreuveWindow(label: string) {
-  const url = `alarm_epreuve.html?label=${encodeURIComponent(label)}`;
+  const relative = `alarm_epreuve.html?label=${encodeURIComponent(label)}`;
+  const url = new URL(relative, window.location.href).toString();
 
-  let existing: WebviewWindow | null = null;
+  if (!isTauriRuntime()) {
+    window.open(url, "_blank");
+    return;
+  }
+
+  const { WebviewWindow } = await import("@tauri-apps/api/webviewWindow");
+
+  let existing: any = null;
   try {
     existing = await WebviewWindow.getByLabel("alarm_epreuve");
   } catch {}
@@ -253,7 +272,7 @@ async function openAlarmEpreuveWindow(label: string) {
   }
 
   const win = new WebviewWindow("alarm_epreuve", {
-    url,
+    url: relative,
     title: "PLACE LIBRE",
     alwaysOnTop: true,
     focus: true,
@@ -267,13 +286,18 @@ async function openAlarmEpreuveWindow(label: string) {
 
   // ✅ Quand Rust émet l'évènement "target_open", on ouvre la fenêtre d'alerte
 useEffect(() => {
-  let unlisten: (() => void) | null = null;
+  // ✅ Quand Rust émet l'évènement "target_open", on ouvre la fenêtre d'alerte
+  // En mode Web (iPhone), il n'y a pas d'events Tauri -> on ignore.
+  let unlisten: undefined | (() => void);
 
-  listen<{ id: number; label: string; url: string }>("target_open", (e) => {
+  if (isTauriRuntime()) {
+    (async () => {
+      const { listen } = await import("@tauri-apps/api/event");
+      unlisten = await listen<{ id: number; label: string; url: string }>("target_open", (e) => {
     const contest = (e.payload?.label || "").trim();
     if (!contest) return;
     const targetUrl = (e.payload?.url || "").trim();
-    const isEpreuve = targetUrl.includes("watch_epreuve=") || /\bepreuve\b/i.test(contest);
+    const isEpreuve = targetUrl.includes("watch_epreuve=") || /epreuve/i.test(contest);
 
     // Déclenchement unique (anti-spam):
     // 1) on ignore les doublons du même concours sur une courte fenêtre
@@ -288,7 +312,9 @@ useEffect(() => {
     void (isEpreuve ? openAlarmEpreuveWindow(contest) : openAlarmConcoursWindow(contest)).finally(() => {
       openingAlarmRef.current = false;
     });
-  }).then(fn => unlisten = fn);
+  });
+    })().catch(() => {});
+  }
 
   return () => {
     if (unlisten) unlisten();
