@@ -3,7 +3,7 @@ import "./styles.css";
 import { addTarget, deleteTarget, listTargets, startWatcher, stopWatcher, type Target } from "./api";
 import { invoke } from "./lib/invoke";
 
-const isTauriRuntime = () => !!(window as any).__TAURI__?.core?.invoke;
+const isTauriRuntime = () => typeof (window as any).__TAURI_INTERNALS__ !== "undefined";
 
 export default function App() {
   const [targets, setTargets] = useState<Target[]>([]);
