@@ -39,27 +39,35 @@ function decodeEntities(s) {
 }
 
 function parseEpreuves(html) {
-  // équivalent de ton Rust epreuves.rs :
-  // <a href="/epreuve/...">Texte</a>
-  const re = /<a[^>]+href="([^"]+)"[^>]*>([^<]+)<\/a>/gi;
   const out = [];
-  let m;
+  const add = (u, label) => {
+    if (!u) return;
+    const full = u.startsWith("http") ? u : `https://ffecompet.ffe.com${u}`;
+    if (!out.some((e) => e.url === full)) out.push({ label: label?.trim() || full, url: full });
+  };
 
-  while ((m = re.exec(html)) !== null) {
-    const href = (m[1] || "").trim();
-    const text = decodeEntities(m[2] || "");
-
-    if (!href) continue;
-    if (!(href.includes("epreuve") || href.includes("epreuves"))) continue;
-
-    const full = href.startsWith("http")
-      ? href
-      : `https://ffecompet.ffe.com${href}`;
-
-    if (!out.some((e) => e.url === full)) {
-      out.push({ label: text, url: full });
-    }
+  // 1) <a href="...">
+  for (const m of html.matchAll(/<a[^>]+href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)) {
+    const href = m[1];
+    const text = m[2].replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+    if (href && /epreuv/i.test(href)) add(href, text);
   }
+
+  // 2) onclick=".../epreuve/..."
+  for (const m of html.matchAll(/onclick=["'][^"']*(\/[^"']*epreuv[^"']*)["']/gi)) {
+    add(m[1], "Épreuve");
+  }
+
+  // 3) data-href="...epreuve..."
+  for (const m of html.matchAll(/data-href=["']([^"']*epreuv[^"']*)["']/gi)) {
+    add(m[1], "Épreuve");
+  }
+
+  // 4) URLs d’épreuves présentes “en dur” dans le HTML/JS
+  for (const m of html.matchAll(/(\/[^\s"'<>]*epreuv[^\s"'<>]*)/gi)) {
+    add(m[1], "Épreuve");
+  }
+
   return out;
 }
 
