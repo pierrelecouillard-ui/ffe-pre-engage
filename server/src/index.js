@@ -19,6 +19,13 @@ app.get("/health", (req, res) => {
   res.json({ ok: true });
 });
 
+app.post("/api/list_epreuves", async (req, res) => {
+  const { contestId } = req.body || {};
+  if (!contestId) return res.status(400).json({ error: "Missing contestId" });
+
+  // TODO: ta logique réelle (fetch/parsing/DB)
+  return res.json({ epreuves: [], contestId });
+});
 
 // Endpoint qui remplace l'ancien invoke("load_epreuves", { url })
 app.post("/api/load-epreuves", async (req, res) => {
